@@ -1,0 +1,58 @@
+name: Start build
+on:
+  workflow_dispatch:
+
+jobs:
+  Building:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 🔄 Checkout Code
+      uses: actions/checkout@v5
+
+    - name: 📦 Install Dependencies
+      run: |
+        sudo apt update -y
+        sudo apt install bc cpio flex bison aptitude git python-is-python3 tar aria2 perl wget curl lz4 libssl-dev -y
+
+    - name: 🔧 Clone Toolchains
+      run: |
+        mkdir clang && cd clang
+        wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/10032024/neutron-clang-10032024.tar.zst
+        tar --zstd -xvf neutron-clang-10032024.tar.zst
+        cd ..
+        git clone https://github.com/greenforce-project/gcc-arm64 -b main --depth=1 gcc64
+        git clone https://github.com/greenforce-project/gcc-arm -b main --depth=1 gcc32
+
+    - name: ⚙️ Setup Environment
+      run: |
+        echo "CLANG_PATH=$GITHUB_WORKSPACE/clang" >> $GITHUB_ENV
+        echo "GCC64_PATH=$GITHUB_WORKSPACE/gcc64" >> $GITHUB_ENV
+        echo "GCC32_PATH=$GITHUB_WORKSPACE/gcc32" >> $GITHUB_ENV
+
+    - name: 🛠️ Build Kernel
+      run: |
+        export ARCH=arm64
+        export PATH="$CLANG_PATH/bin:$GCC64_PATH/bin:$GCC32_PATH/bin:$PATH"
+        export KBUILD_BUILD_USER=Llorens
+        export KBUILD_BUILD_HOST=MKernel
+        make O=out ARCH=arm64 vendor/sweet_defconfig
+        make -j$(nproc --all) O=out ARCH=arm64 LLVM=1 LLVM_IAS=1 CC=clang \
+          CLANG_TRIPLE=$CLANG_PATH/aarch64-linux-gnu- \
+          CROSS_COMPILE=$GCC64_PATH/bin/aarch64-elf- \
+          CROSS_COMPILE_ARM32=$GCC32_PATH/bin/arm-eabi-
+
+    - name: 📂 Clone Anykernel3 & Zip
+      run: |
+        git clone --depth=1 https://github.com/r0xx3z/Ak3.git -b Sweet AnyKernel3
+        cp out/arch/arm64/boot/Image.gz AnyKernel3/Image.gz
+        cp out/arch/arm64/boot/dtbo.img AnyKernel3/dtbo.img
+        cp out/arch/arm64/boot/dtb.img AnyKernel3/dtb.img
+        cd AnyKernel3
+        zip -r "../MKernel.zip" *
+
+    - name: 📤 Upload Flashable zip
+      uses: actions/upload-artifact@v5
+      with:
+        name: MKernel
+        path: AnyKernel3/*
