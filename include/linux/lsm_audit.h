@@ -129,3 +129,4 @@ static inline void common_lsm_audit(struct common_audit_data *a,
 }
 
 #endif
+#endif /* _LSM_COMMON_LOGGING_ */
