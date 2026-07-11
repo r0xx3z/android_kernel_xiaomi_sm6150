@@ -74,7 +74,7 @@ $(obj)/dtbo.img: $(DTBO_OBJS) FORCE
 	$(call if_changed,mkdtimg)
 
 $(obj)/dtb.img: $(DTB_OBJS) FORCE
-	$(call if_changed,cat
+	$(call if_changed,cat)
 		
 install:
 	$(CONFIG_SHELL) $(srctree)/$(src)/install.sh $(KERNELRELEASE) \
