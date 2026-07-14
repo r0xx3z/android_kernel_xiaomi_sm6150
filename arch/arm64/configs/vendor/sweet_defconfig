@@ -6119,3 +6119,8 @@ CONFIG_MACH_XIAOMI_SWEET=y
 #
 # RmNet extensions
 #
+
+#
+# Nomount
+#
+CONFIG_NOMOUNT=y
