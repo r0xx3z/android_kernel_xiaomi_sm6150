@@ -1,48 +1,96 @@
 #!/bin/bash
-#set -e
-#By Ll0rens
+# By Ll0rens
 
-echo ""
-echo "=========================="
-echo "  Cloning toolchains..."
-echo "=========================="
-echo ""
-sleep 1
+echo
+echo "================================="
+echo " Installing build toolchains..."
+echo "================================="
+echo
 
 ################################
-# Toolchains
+# Neutron Clang
 ################################
 
-# AnyKernel3 only if it does not exist
-if [ ! -d "AnyKernel3" ]; then
-    echo "Cloning AnyKernel3..."
-    git clone -q https://github.com/r0xx3z/Ak3.git -b Sweet AnyKernel3
+if [ ! -d "clang" ]; then
+    echo "[*] Installing Neutron Clang..."
+
+    mkdir -p clang
+    pushd clang >/dev/null
+
+    curl -LO https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman
+    chmod +x antman
+
+    ./antman -S
+    ./antman --patch=glibc
+
+    popd >/dev/null
 else
-    echo "AnyKernel3 directory already exists. Skipping clone."
+    echo "[✓] clang already exists."
 fi
 
+echo
 
+################################
 # GCC 64
+################################
 
-if [ ! -d gcc64 ]; then
-    git clone --depth=1 \
+if [ ! -d "gcc64" ]; then
+    echo "[*] Cloning GCC64..."
+
+    git clone \
+        --depth=1 \
         https://github.com/greenforce-project/gcc-arm64 \
-        -b main gcc64
+        -b main \
+        gcc64
+else
+    echo "[✓] gcc64 already exists."
 fi
 
-echo ""
+echo
 
+################################
 # GCC 32
+################################
 
-if [ ! -d gcc32 ]; then
-    git clone --depth=1 \
+if [ ! -d "gcc32" ]; then
+    echo "[*] Cloning GCC32..."
+
+    git clone \
+        --depth=1 \
         https://github.com/greenforce-project/gcc-arm \
-        -b main gcc32
+        -b main \
+        gcc32
+else
+    echo "[✓] gcc32 already exists."
 fi
 
-echo ""
-echo "========================================"
-echo "  Toolchains installed successfully."
-echo "========================================"
-sleep 2
-exit
+echo
+
+################################
+# AnyKernel3
+################################
+
+if [ ! -d "AnyKernel3" ]; then
+    echo "[*] Cloning AnyKernel3..."
+
+    git clone \
+        --depth=1 \
+        https://github.com/r0xx3z/Ak3.git \
+        -b Sweet \
+        AnyKernel3
+else
+    echo "[✓] AnyKernel3 already exists."
+fi
+
+echo
+echo "======================================"
+echo " Toolchains installed successfully!"
+echo "======================================"
+echo
+
+echo "Installed toolchains:"
+echo "  Clang      : $(pwd)/clang"
+echo "  GCC64      : $(pwd)/gcc64"
+echo "  GCC32      : $(pwd)/gcc32"
+echo "  AnyKernel3 : $(pwd)/AnyKernel3"
+echo
